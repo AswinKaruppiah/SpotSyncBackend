@@ -60,6 +60,8 @@ const api = async (item, index) => {
       };
     }
 
+    console.log(download);
+
     const uploadResult = await uploadfile(
       {
         Body: download,
