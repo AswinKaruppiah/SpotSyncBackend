@@ -27,6 +27,24 @@ export const uploadfile = async (params, item, index) => {
   }
 };
 
+async function downloadWithRetry(ytid, retries = 3, delayMs = 3000) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await ytdl(`https://youtu.be/${ytid}`, {
+        format: "mp3",
+        quality: "highestaudio",
+      });
+    } catch (err) {
+      if (err.statusCode === 429 && attempt < retries) {
+        console.log(`Got 429, waiting ${delayMs}ms before retry...`);
+        await new Promise((res) => setTimeout(res, delayMs));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 const api = async (item, index) => {
   let img, ytid;
 
@@ -44,10 +62,7 @@ const api = async (item, index) => {
 
     let download;
     try {
-      download = await ytdl(`https://youtu.be/${ytid}`, {
-        format: "mp3",
-        quality: "highestaudio",
-      });
+      download = await downloadWithRetry(ytid);
     } catch (error) {
       console.error(
         `${index}--------Error in audio conversion------${item}`,
